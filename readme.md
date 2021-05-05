@@ -41,7 +41,7 @@ docker run --detach \
     --env "UID=$(id -u)" \
     --env "USERNAME=admin" \
     --env "PASSWORD=mysecretpassword" \
-    caseyfw/transmission
+    bgmidocker/transmission
 ```
 
 Once run, Transmission's web UI will be available at http://localhost:8080 with the account `admin` / `mysecretpassword`. Downloads will appear in `~/Downloads` and should have the correct permissions. Note the `--restart=always` will cause Docker to bring the container back up if it dies or the Pi is restarted.
