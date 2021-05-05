@@ -1,44 +1,47 @@
-# Docker for aria2c
+# bgmidocker/transmission
 
 
-## Configuration
+## this Docker Image is for testing, Please use checkout this https://github.com/BGmi/BGmi#docker
 
-`RPC_SECRET`: rpc secret
+Dockerised [Transmission](https://en.wikipedia.org/wiki/Transmission_(BitTorrent_client)) BitTorrent client.
 
-`DOWNLOAD_DIR`: download dir, default `/downloads`
+## Usage
+The simplest use case is to volume a local directory to the `/downloads` directory of the container, and publish the web UI (9091) and BitTorrent ports (6881):
 
-be careful with `DOWNLOAD_DIR`, it's path inside the container,
-you need to mount host path in container.
-
-`CONCURRENT_DOWNLOADS`: limits the number of items which are downloaded concurrently
-
-`SPLIT`: Download a file using N connections. default: `4`
-
-`CONNECTIONS_PER_SERVER`: max connection per server. default: `4`
-
-`USER_AGENT`: download user agent, default aria2c default user agent.
-
-`FILE_ALLOCATION`: Specify file allocation method. default `none`
-
-`ALLOW_OVERWRITE`: default `true`
-
-`AUTO_FILE_RENAMING`:default: `false`
-
-
-## configuration
-
-you can mount your config file to `/etc/aria2.conf` to override inner config file.
-
-When mounting your own config file, all environment variable won't work.
-
-## usage as bgmi downloader
-
-mount your `$HOME/.bgmi/bangumi` inside the container with same path.
-
-```bash
-docker run -v $HOME/.bgmi/bangumi:$HOME/.bgmi/bangumi \
-           -v $HOME/Downloads:/downloads \
-           -e RPC_SECRET=$YOUR_SECRET \
-           -p 6800:6800 \
-           -d bgmidocker/aria2
 ```
+docker run --detach --volume /your/download/dir:/downloads \
+    --publish 9091:9091 --publish 6881:6881 caseyfw/transmission
+```
+
+Transmission's web UI will now be available at http://localhost:9091 with the account `username` / `password`. Downloaded torrents will appear in `/your/download/dir`.
+
+## Environment variables
+Setting the following environment variables with the docker `--env` argument will change their corresponding setting in Transmission:
+
+- `ALLOWED` comma separated whitelist of IP addresses allowed to access the web UI. Default: `*` (all IPs).
+- `DOWNLOAD_DIR` the directory in the container to put downloaded files. Default: `/downloads`. You probably don't want to change this, just volume a directory from your host machine to `/downloads` in the container.
+- `INCOMPLETE_DIR` the directory in the container to put incomplete downloads. Default: `/downloads/incomplete`.
+- `CONFIG_DIR` the directory transmission uses to read/store config. Default: `/etc/transmission`. Setting this, and voluming a `config.json` into the directory allows you to set configuration items that are not present here.
+- `PORT` the BitTorrent port. Default: `6881`. You probably don't want to change this, just map the port of your choosing to 6881 on the container using the `--publish` argument.
+- `WEB_PORT` the web UI port. Default: `9091`. You probably don't want to change this, just map the port of your choosing to 9091 on the container using the `--publish` argument.
+- `USERNAME` the web UI username. Default: `username`.
+- `PASSWORD` the web UI username. Default: `password`.
+- `UID` the user id to run Transmission as. Default: `0` (root). This is useful for ensuring downloads from Transmission are owned by the correct user. You probably want to set this to `$(uid -u)` which is likely `1000`. See the example below.
+
+## Example RaspberryPi usage
+This container is useful for running Transmission on a RaspberryPi. Here is a suggested command to start Transmission if you have already [installed Docker](https://github.com/umiddelb/armhf/wiki/Get-Docker-up-and-running-on-the-RaspberryPi-(ARMv6)-in-three-steps):
+
+```
+docker run --detach \
+    --name transmission
+    --restart=always \
+    --volume /home/pi/Downloads:/downloads \
+    --publish 8080:9091 \
+    --publish 6881:6881 \
+    --env "UID=$(id -u)" \
+    --env "USERNAME=admin" \
+    --env "PASSWORD=mysecretpassword" \
+    caseyfw/transmission
+```
+
+Once run, Transmission's web UI will be available at http://localhost:8080 with the account `admin` / `mysecretpassword`. Downloads will appear in `~/Downloads` and should have the correct permissions. Note the `--restart=always` will cause Docker to bring the container back up if it dies or the Pi is restarted.
