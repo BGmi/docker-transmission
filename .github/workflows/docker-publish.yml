@@ -47,7 +47,7 @@ jobs:
 
       - name: Push image
         run: |
-          IMAGE_ID=bgmidocker/aria2
+          IMAGE_ID=bgmidocker/transmission
 
           # Change all uppercase to lowercase
           IMAGE_ID=$(echo $IMAGE_ID | tr '[A-Z]' '[a-z]')
